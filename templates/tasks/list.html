@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Mes tâches — ESMT TaskManager{% endblock %}
+{% block page_title %}Mes tâches{% endblock %}
+
+{% block extra_css %}
+.filter-row {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background:white; border:1.5px solid var(--border); border-radius:12px;
+  padding:12px 16px; margin-bottom:20px; box-shadow:var(--shadow);
+}
+.filter-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
+.filter-divider { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+.ftab { display:inline-flex; align-items:center; gap:5px; padding:6px 13px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; color:var(--text2); border:1.5px solid transparent; transition:all 0.15s; white-space:nowrap; }
+.ftab:hover { background:var(--blue-light); color:var(--blue); border-color:var(--border2); }
+.ftab.active { background:var(--blue); color:white; border-color:var(--blue); }
+.ftab.active:hover { background:var(--blue2); }
+.search-wrap { position:relative; flex:1; min-width:180px; }
+.search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--muted); }
+.search-wrap input { width:100%; padding:7px 12px 7px 33px; border-radius:8px; border:1.5px solid var(--border); background:var(--input-bg); font-size:13px; color:var(--text); outline:none; transition:all 0.15s; }
+.search-wrap input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(14,165,233,0.1); background:white; }
+.proj-select { padding:7px 12px; border-radius:8px; border:1.5px solid var(--border); background:var(--input-bg); font-size:12px; color:var(--text); outline:none; cursor:pointer; font-family:Inter,sans-serif; }
+.proj-select:focus { border-color:var(--blue); }
+{% endblock %}
+
+{% block content %}
+
+<!-- Filtres horizontaux -->
+<div class="filter-row">
+  <span class="filter-label">Statut</span>
+  <a href="{% url 'task-list' %}" class="ftab {% if not status_filter %}active{% endif %}">
+    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+    Toutes
+  </a>
+  <a href="?status=a_faire{% if project_filter %}&project={{ project_filter }}{% endif %}" class="ftab {% if status_filter == 'a_faire' %}active{% endif %}">
+    <span style="width:7px;height:7px;border-radius:50%;background:{% if status_filter == 'a_faire' %}white{% else %}#0ea5e9{% endif %};display:inline-block;"></span>
+    À faire
+  </a>
+  <a href="?status=en_cours{% if project_filter %}&project={{ project_filter }}{% endif %}" class="ftab {% if status_filter == 'en_cours' %}active{% endif %}">
+    <span style="width:7px;height:7px;border-radius:50%;background:{% if status_filter == 'en_cours' %}white{% else %}#f59e0b{% endif %};display:inline-block;"></span>
+    En cours
+  </a>
+  <a href="?status=termine{% if project_filter %}&project={{ project_filter }}{% endif %}" class="ftab {% if status_filter == 'termine' %}active{% endif %}">
+    <span style="width:7px;height:7px;border-radius:50%;background:{% if status_filter == 'termine' %}white{% else %}#10b981{% endif %};display:inline-block;"></span>
+    Terminées
+  </a>
+
+  <div class="filter-divider"></div>
+  <span class="filter-label">Projet</span>
+  {% if projects %}
+  <select class="proj-select" onchange="location.href='?{% if status_filter %}status={{ status_filter }}&{% endif %}project='+this.value">
+    <option value="">— Tous —</option>
+    {% for p in projects %}
+    <option value="{{ p.pk }}" {% if project_filter == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+
+  <div class="filter-divider"></div>
+  <div class="search-wrap">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <input type="text" id="searchInput" placeholder="Rechercher une tâche..." oninput="filterTasks(this.value)">
+  </div>
+</div>
+
+{% if tasks %}
+<div class="card" style="padding:0;overflow:hidden;">
+  <table>
+    <thead>
+      <tr>
+        <th>Tâche</th>
+        <th>Projet</th>
+        <th>Priorité</th>
+        <th>Statut</th>
+        <th>Deadline</th>
+        <th>Assigné à</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tasksTable">
+      {% for task in tasks %}
+      <tr class="task-row" data-title="{{ task.title|lower }}">
+        <td>
+          <div style="font-weight:600;color:var(--text);font-size:13px;display:flex;align-items:center;gap:7px;">
+            <span class="dot {% if task.status == 'termine' %}dot-green{% elif task.status == 'en_cours' %}dot-yellow{% else %}dot-blue{% endif %}"></span>
+            {{ task.title }}
+          </div>
+          {% if task.description %}
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;padding-left:15px;">{{ task.description|truncatechars:60 }}</div>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'project-detail' task.project.pk %}" style="color:var(--blue);text-decoration:none;font-size:12px;font-weight:500;">
+            {{ task.project.name }}
+          </a>
+        </td>
+        <td>
+          <span class="badge {% if task.priority == 'haute' or task.priority == 'urgente' %}badge-danger{% elif task.priority == 'normale' %}badge-info{% else %}badge-blue{% endif %}">
+            {{ task.get_priority_display }}
+          </span>
+        </td>
+        <td>
+          <span class="badge {% if task.status == 'termine' %}badge-success{% elif task.status == 'en_cours' %}badge-warning{% else %}badge-info{% endif %}">
+            {{ task.get_status_display }}
+          </span>
+        </td>
+        <td>
+          <span style="font-size:12px;{% if task.is_overdue and task.status != 'termine' %}color:var(--danger);font-weight:600;{% else %}color:var(--muted);{% endif %}">
+            {% if task.is_overdue and task.status != 'termine' %}⚠️ {% endif %}
+            {{ task.deadline|date:"d/m/Y" }}
+          </span>
+        </td>
+        <td>
+          {% if task.assigned_to %}
+          <span style="font-size:12px;color:var(--text2);">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span>
+          {% else %}
+          <span style="color:var(--muted);font-size:12px;">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="{% url 'task-detail' task.pk %}" class="btn btn-ghost btn-sm">Voir</a>
+            {% if task.assigned_to == request.user or task.project.creator == request.user %}
+            <a href="{% url 'task-edit' task.pk %}" class="btn btn-outline btn-sm">Modifier</a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state" style="padding:80px 20px;">
+  <div class="empty-icon">📋</div>
+  <h3>Aucune tâche trouvée</h3>
+  <p>{% if status_filter %}Aucune tâche avec ce statut.{% else %}Aucune tâche pour le moment.{% endif %}</p>
+</div>
+{% endif %}
+
+<script>
+function filterTasks(query) {
+  query = query.toLowerCase();
+  document.querySelectorAll('.task-row').forEach(row => {
+    row.style.display = (row.dataset.title || '').includes(query) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

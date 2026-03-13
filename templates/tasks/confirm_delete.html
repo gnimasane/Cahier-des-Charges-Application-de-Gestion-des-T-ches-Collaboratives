@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Supprimer la tâche{% endblock %}
+{% block page_title %}Supprimer la tâche{% endblock %}
+{% block content %}
+<div style="max-width:480px;">
+  <div class="card" style="border-color:rgba(239,68,68,0.3);">
+    <div class="card-title" style="color:var(--danger);">⚠️ Confirmer la suppression</div>
+    <p>Supprimer la tâche <strong>{{ task.title }}</strong> ?</p>
+    <div style="display:flex;gap:12px;margin-top:24px;">
+      <form method="post">{% csrf_token %}
+        <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+      </form>
+      <a href="{% url 'task-detail' task.pk %}" class="btn btn-outline">Annuler</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

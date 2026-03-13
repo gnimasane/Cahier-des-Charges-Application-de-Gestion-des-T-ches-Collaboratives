@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} — ESMT Tasks{% endblock %}
+{% block page_title %}{{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom:24px;">
+  <div class="card">
+    <div class="card-title">📋 Informations</div>
+    <p style="color:var(--text-muted);margin-bottom:16px;">{{ project.description|default:"Aucune description." }}</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <span class="badge {% if project.status == 'actif' %}badge-success{% elif project.status == 'termine' %}badge-info{% else %}badge-warning{% endif %}">{{ project.get_status_display }}</span>
+      {% if project.start_date %}<span style="font-size:12px;color:var(--text-muted);">📅 Début: {{ project.start_date|date:"d/m/Y" }}</span>{% endif %}
+      {% if project.end_date %}<span style="font-size:12px;color:var(--text-muted);">🏁 Fin: {{ project.end_date|date:"d/m/Y" }}</span>{% endif %}
+    </div>
+    <div style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+        <span>Progression globale</span><span>{{ project.get_completion_rate }}%</span>
+      </div>
+      <div class="progress-bar" style="height:8px;">
+        <div class="progress-fill" style="width:{{ project.get_completion_rate }}%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👥 Membres ({{ project.members.count }})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(168,85,247,0.1);border-radius:8px;padding:8px 12px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">{{ project.creator.username|first|upper }}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;">{{ project.creator.get_full_name|default:project.creator.username }}</div>
+          <div style="font-size:10px;color:var(--accent2);">Créateur • {{ project.creator.get_role_display }}</div>
+        </div>
+      </div>
+      {% for member in project.members.all %}
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px;border:1px solid var(--border);">
+        <div style="width:30px;height:30px;border-radius:50%;background:rgba(168,85,247,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">{{ member.username|first|upper }}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;">{{ member.get_full_name|default:member.username }}</div>
+          <div style="font-size:10px;color:var(--text-muted);">{{ member.get_role_display }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title" style="justify-content:space-between;">
+    <span>📝 Tâches ({{ tasks.count }})</span>
+    {% if project.creator == request.user %}
+    <a href="{% url 'task-create' project.pk %}" class="btn btn-primary btn-sm">+ Nouvelle tâche</a>
+    {% endif %}
+  </div>
+
+  <!-- Filtres -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <a href="?" class="btn btn-outline btn-sm {% if not request.GET.status %}btn-primary{% endif %}">Toutes</a>
+    <a href="?status=a_faire" class="btn btn-outline btn-sm">À faire</a>
+    <a href="?status=en_cours" class="btn btn-outline btn-sm">En cours</a>
+    <a href="?status=termine" class="btn btn-outline btn-sm">Terminées</a>
+  </div>
+
+  {% if tasks %}
+  <table>
+    <thead><tr><th>Tâche</th><th>Assigné à</th><th>Priorité</th><th>Statut</th><th>Deadline</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td><strong>{{ task.title }}</strong><br><small style="color:var(--text-muted);">{{ task.description|truncatechars:50 }}</small></td>
+        <td>
+          {% if task.assigned_to %}
+          <span style="font-size:12px;">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</span><br>
+          <span class="badge {% if task.assigned_to.is_professeur %}badge-purple{% else %}badge-info{% endif %}" style="font-size:10px;">{{ task.assigned_to.get_role_display }}</span>
+          {% else %}<span style="color:var(--text-muted);">—</span>{% endif %}
+        </td>
+        <td>
+          {% if task.priority == 'urgente' %}<span class="badge badge-danger">Urgente</span>
+          {% elif task.priority == 'haute' %}<span class="badge badge-warning">Haute</span>
+          {% elif task.priority == 'normale' %}<span class="badge badge-info">Normale</span>
+          {% else %}<span class="badge">Basse</span>{% endif %}
+        </td>
+        <td>
+          {% if task.status == 'termine' %}<span class="badge badge-success">✅ Terminé</span>
+          {% elif task.status == 'en_cours' %}<span class="badge badge-warning">⏳ En cours</span>
+          {% else %}<span class="badge badge-info">📌 À faire</span>{% endif %}
+        </td>
+        <td>
+          {% if task.deadline %}
+            {% if task.is_overdue %}<span style="color:var(--danger);font-size:12px;">⚠️ {{ task.deadline|date:"d/m/Y" }}</span>
+            {% else %}<span style="font-size:12px;">{{ task.deadline|date:"d/m/Y" }}</span>{% endif %}
+          {% else %}<span style="color:var(--text-muted);">—</span>{% endif %}
+        </td>
+        <td>
+          {% if project.creator == request.user or task.assigned_to == request.user %}
+          <a href="{% url 'task-edit' task.pk %}" class="btn btn-outline btn-sm">✏️</a>
+          {% endif %}
+          {% if project.creator == request.user %}
+          <a href="{% url 'task-delete' task.pk %}" class="btn btn-danger btn-sm">🗑</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center;padding:32px;color:var(--text-muted);">
+    Aucune tâche.
+    {% if project.creator == request.user %}
+    <a href="{% url 'task-create' project.pk %}" class="btn btn-primary" style="margin-left:12px;">Créer la première tâche</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if project.creator == request.user %}
+<div style="display:flex;gap:12px;">
+  <a href="{% url 'project-edit' project.pk %}" class="btn btn-outline">✏️ Modifier le projet</a>
+  <a href="{% url 'project-delete' project.pk %}" class="btn btn-danger">🗑 Supprimer</a>
+</div>
+{% endif %}
+{% endblock %}

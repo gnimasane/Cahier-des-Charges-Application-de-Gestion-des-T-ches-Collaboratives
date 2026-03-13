@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Projets — ESMT Tasks{% endblock %}
+{% block page_title %}Projets{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+  <a href="{% url 'project-create' %}" class="btn btn-primary">+ Nouveau projet</a>
+</div>
+
+{% if created %}
+<div class="card">
+  <div class="card-title">📁 Mes projets (créateur)</div>
+  <table>
+    <thead><tr><th>Projet</th><th>Statut</th><th>Membres</th><th>Progression</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for p in created %}
+      <tr>
+        <td><strong>{{ p.name }}</strong><br><small style="color:var(--text-muted);">{{ p.description|truncatechars:50 }}</small></td>
+        <td>
+          {% if p.status == 'actif' %}<span class="badge badge-success">Actif</span>
+          {% elif p.status == 'termine' %}<span class="badge badge-info">Terminé</span>
+          {% elif p.status == 'en_pause' %}<span class="badge badge-warning">En pause</span>
+          {% else %}<span class="badge">{{ p.get_status_display }}</span>{% endif %}
+        </td>
+        <td>{{ p.members.count }}</td>
+        <td>
+          <div class="progress-bar"><div class="progress-fill" style="width:{{ p.get_completion_rate }}%;"></div></div>
+          <small style="color:var(--text-muted);">{{ p.get_completion_rate }}%</small>
+        </td>
+        <td style="display:flex;gap:6px;">
+          <a href="{% url 'project-detail' p.pk %}" class="btn btn-outline btn-sm">Voir</a>
+          <a href="{% url 'project-edit' p.pk %}" class="btn btn-outline btn-sm">✏️</a>
+          <a href="{% url 'project-delete' p.pk %}" class="btn btn-danger btn-sm">🗑</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if member_of %}
+<div class="card">
+  <div class="card-title">👥 Projets où je suis membre</div>
+  <table>
+    <thead><tr><th>Projet</th><th>Créateur</th><th>Statut</th><th>Progression</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for p in member_of %}
+      <tr>
+        <td><strong>{{ p.name }}</strong></td>
+        <td><small>{{ p.creator.get_full_name|default:p.creator.username }}</small></td>
+        <td>
+          {% if p.status == 'actif' %}<span class="badge badge-success">Actif</span>
+          {% else %}<span class="badge">{{ p.get_status_display }}</span>{% endif %}
+        </td>
+        <td>
+          <div class="progress-bar"><div class="progress-fill" style="width:{{ p.get_completion_rate }}%;"></div></div>
+          <small style="color:var(--text-muted);">{{ p.get_completion_rate }}%</small>
+        </td>
+        <td><a href="{% url 'project-detail' p.pk %}" class="btn btn-outline btn-sm">Voir</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if not created and not member_of %}
+<div class="card" style="text-align:center;padding:60px;">
+  <div style="font-size:64px;margin-bottom:16px;">📭</div>
+  <h3 style="font-family:'Syne',sans-serif;">Aucun projet</h3>
+  <p style="color:var(--text-muted);margin:12px 0 24px;">Créez votre premier projet pour commencer.</p>
+  <a href="{% url 'project-create' %}" class="btn btn-primary">Créer un projet</a>
+</div>
+{% endif %}
+{% endblock %}

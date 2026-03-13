@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connexion — ESMT TaskManager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: #f0f7ff;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+
+    .page-wrap {
+      display: flex;
+      width: 100%;
+      max-width: 1100px;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+    }
+
+    /* LEFT — Branding */
+    .brand-side {
+      flex: 1;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    .brand-logo-box {
+      background: white;
+      border-radius: 18px;
+      padding: 18px 28px;
+      box-shadow: 0 4px 20px rgba(14,165,233,0.1);
+      display: inline-block;
+    }
+    .brand-logo-box img { height: 60px; object-fit: contain; }
+
+    .brand-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      color: #0c2340;
+      line-height: 1.15;
+    }
+    .brand-title span { color: #0ea5e9; }
+
+    .brand-desc { font-size: 15px; color: #4a6080; line-height: 1.7; max-width: 360px; }
+
+    .feature-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+    .feature-item {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px; color: #4a6080; font-weight: 500;
+    }
+    .feature-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #e0f2fe; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    .badge-esmt {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #e0f2fe; color: #0369a1;
+      padding: 8px 16px; border-radius: 99px;
+      font-size: 12px; font-weight: 700;
+      border: 1px solid #bae6fd;
+    }
+
+    /* RIGHT — Form card */
+    .form-card {
+      background: white;
+      border-radius: 24px;
+      padding: 44px 42px;
+      width: 420px;
+      flex-shrink: 0;
+      box-shadow: 0 8px 40px rgba(14,165,233,0.12);
+      border: 1px solid #e0f2fe;
+    }
+
+    .form-header { margin-bottom: 32px; }
+    .form-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px; font-weight: 800; color: #0c2340; margin-bottom: 6px;
+    }
+    .form-header p { font-size: 14px; color: #7a94b0; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: #0c2340; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #94b5cc; pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      border-radius: 12px;
+      border: 1.5px solid #dbeafe;
+      background: #f0f9ff;
+      color: #0c2340;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      border-color: #0ea5e9;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.1);
+    }
+    .form-input::placeholder { color: #b0c8d8; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(14,165,233,0.35);
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      margin-top: 4px;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(14,165,233,0.45);
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    }
+
+    .form-footer {
+      text-align: center; margin-top: 22px;
+      font-size: 13px; color: #7a94b0;
+    }
+    .form-footer a { color: #0ea5e9; font-weight: 700; text-decoration: none; }
+    .form-footer a:hover { color: #0284c7; }
+
+    .alert-error {
+      background: #fef2f2; color: #991b1b;
+      border: 1.5px solid #fecaca;
+      padding: 11px 16px; border-radius: 10px;
+      font-size: 13px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: #b0c8d8; font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #dbeafe;
+    }
+
+    @media (max-width: 860px) {
+      .page-wrap { flex-direction: column; gap: 32px; }
+      .brand-side { align-items: center; text-align: center; }
+      .brand-desc { text-align: center; }
+      .feature-list { align-items: flex-start; }
+      .form-card { width: 100%; max-width: 420px; padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- BRANDING -->
+  <div class="brand-side">
+    <div class="brand-logo-box">
+      <img src="data:image/png;base64,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" alt="ESMT Logo"/>
+    </div>
+
+    <div>
+      <div class="brand-title">ESMT<br/><span>TaskManager</span></div>
+    </div>
+
+    <p class="brand-desc">
+      Plateforme collaborative de gestion de projets et de tâches pour les étudiants et professeurs de l'ESMT.
+    </p>
+
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-dot">📁</div> Gestion de projets en équipe</div>
+      <div class="feature-item"><div class="feature-dot">✅</div> Suivi des tâches en temps réel</div>
+      <div class="feature-item"><div class="feature-dot">📊</div> Statistiques et taux de complétion</div>
+      <div class="feature-item"><div class="feature-dot">📧</div> Notifications par email automatiques</div>
+    </div>
+
+    <div class="badge-esmt">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      Plateforme officielle ESMT Dakar
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <div class="form-header">
+      <h2>Bon retour 👋</h2>
+      <p>Connectez-vous à votre espace personnel</p>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert-error">⚠️ {{ message }}</div>
+    {% endfor %}
+
+    <form method="post" action="/login/">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Adresse e-mail</label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          <input type="email" name="email" class="form-input" placeholder="vous@esmt.sn" required autocomplete="email"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password"/>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">Se connecter →</button>
+    </form>
+
+    <div class="form-footer">
+      Pas encore de compte ? <a href="{% url 'register' %}">Créer un compte</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

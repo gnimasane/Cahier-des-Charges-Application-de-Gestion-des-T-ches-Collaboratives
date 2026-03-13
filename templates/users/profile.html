@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Mon Profil — ESMT Tasks{% endblock %}
+{% block page_title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;overflow:hidden;">
+        {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.username|first|upper }}{% endif %}
+      </div>
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;">{{ user.get_full_name|default:user.username }}</h2>
+        <span class="badge {% if user.is_professeur %}badge-purple{% else %}badge-info{% endif %}">{{ user.get_role_display }}</span>
+      </div>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Prénom</label>
+          <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom</label>
+          <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ user.email }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea name="bio" class="form-control" rows="3" placeholder="Parlez de vous...">{{ user.bio }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Avatar</label>
+        <input type="file" name="avatar" class="form-control" accept="image/*">
+      </div>
+      <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔐 Changer le mot de passe</div>
+    <form method="post" action="{% url 'profile' %}">
+      {% csrf_token %}
+      <input type="hidden" name="change_password" value="1">
+      <div class="form-group">
+        <label class="form-label">Ancien mot de passe</label>
+        <input type="password" name="old_password" class="form-control">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Nouveau mot de passe</label>
+          <input type="password" name="new_password" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer</label>
+          <input type="password" name="new_password_confirm" class="form-control">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-outline">Changer le mot de passe</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

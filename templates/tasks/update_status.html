@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Mettre à jour le statut{% endblock %}
+{% block page_title %}Mettre à jour le statut{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;">
+  <div class="card">
+    <div class="card-title">📝 {{ task.title }}</div>
+    <p style="color:var(--text-muted);margin-bottom:8px;">Projet : <strong>{{ task.project.name }}</strong></p>
+    <p style="color:var(--text-muted);margin-bottom:20px;font-size:13px;">En tant que membre assigné, vous pouvez uniquement modifier le statut de cette tâche.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Nouveau statut</label>
+        <select name="status" class="form-control">
+          <option value="a_faire" {% if task.status == 'a_faire' %}selected{% endif %}>📌 À faire</option>
+          <option value="en_cours" {% if task.status == 'en_cours' %}selected{% endif %}>⏳ En cours</option>
+          <option value="termine" {% if task.status == 'termine' %}selected{% endif %}>✅ Terminé</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+        <a href="{% url 'task-detail' task.pk %}" class="btn btn-outline">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

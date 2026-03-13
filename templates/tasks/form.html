@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — ESMT Tasks{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card">
+    <div class="card-title">
+      {{ title }}
+      {% if task.project %} — {{ task.project.name }}{% elif project %} — {{ project.name }}{% endif %}
+    </div>
+    {% if request.user.is_etudiant %}
+    <div style="padding:10px 14px;background:#e0f2fe;border:1px solid #bae6fd;border-radius:8px;margin-bottom:20px;font-size:13px;color:#0284c7;">
+      ℹ️ En tant qu'étudiant, vous ne pouvez assigner des tâches qu'à des <strong>étudiants</strong>.
+    </div>
+    {% endif %}
+    {% if form.errors %}
+    <div class="alert alert-error">{{ form.errors }}</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      {% if is_status_only %}
+        <!-- Membre assigné: statut uniquement -->
+        <div class="form-group">
+          <label class="form-label">Statut de la tâche</label>
+          <select name="status" class="form-control">
+            <option value="a_faire" {% if task.status == 'a_faire' %}selected{% endif %}>À faire</option>
+            <option value="en_cours" {% if task.status == 'en_cours' %}selected{% endif %}>En cours</option>
+            <option value="termine" {% if task.status == 'termine' %}selected{% endif %}>Terminé</option>
+          </select>
+        </div>
+      {% else %}
+        <!-- Créateur: formulaire complet -->
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" name="title" class="form-control" placeholder="Titre de la tâche" required value="{{ form.title.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="3" placeholder="Détails de la tâche...">{{ form.description.value|default:'' }}</textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Assigné à</label>
+            <select name="assigned_to" class="form-control">
+              <option value="">— Non assigné —</option>
+              {% for u in form.fields.assigned_to.queryset %}
+              <option value="{{ u.pk }}" {% if form.assigned_to.value == u.pk|stringformat:"s" %}selected{% endif %}>
+                {{ u.get_full_name|default:u.username }} ({{ u.get_role_display }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priorité</label>
+            <select name="priority" class="form-control">
+              <option value="basse" {% if form.priority.value == 'basse' %}selected{% endif %}>Basse</option>
+              <option value="normale" {% if form.priority.value == 'normale' or not form.priority.value %}selected{% endif %}>Normale</option>
+              <option value="haute" {% if form.priority.value == 'haute' %}selected{% endif %}>Haute</option>
+              <option value="urgente" {% if form.priority.value == 'urgente' %}selected{% endif %}>Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Statut</label>
+            <select name="status" class="form-control">
+              <option value="a_faire" {% if form.status.value == 'a_faire' %}selected{% endif %}>À faire</option>
+              <option value="en_cours" {% if form.status.value == 'en_cours' %}selected{% endif %}>En cours</option>
+              <option value="termine" {% if form.status.value == 'termine' %}selected{% endif %}>Terminé</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deadline</label>
+            <input type="datetime-local" name="deadline" class="form-control" value="{{ form.deadline.value|default:'' }}">
+          </div>
+        </div>
+      {% endif %}
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        {% if task %}
+          <a href="{% url 'task-detail' task.pk %}" class="btn btn-outline">Annuler</a>
+        {% elif project %}
+          <a href="{% url 'project-detail' project.pk %}" class="btn btn-outline">Annuler</a>
+        {% else %}
+          <a href="{% url 'task-list' %}" class="btn btn-outline">Annuler</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

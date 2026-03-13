@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — ESMT Tasks{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card">
+    <div class="card-title">{{ title }}</div>
+    {% if form.errors %}
+    <div class="alert alert-error">{{ form.errors }}</div>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Nom du projet *</label>
+        <input type="text" name="name" class="form-control" placeholder="Nom du projet" required value="{{ form.name.value|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="Décrivez ce projet...">{{ form.description.value|default:'' }}</textarea>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Date de début</label>
+          <input type="date" name="start_date" class="form-control" value="{{ form.start_date.value|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de fin</label>
+          <input type="date" name="end_date" class="form-control" value="{{ form.end_date.value|default:'' }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statut</label>
+        <select name="status" class="form-control">
+          <option value="actif" {% if form.status.value == 'actif' %}selected{% endif %}>Actif</option>
+          <option value="en_pause" {% if form.status.value == 'en_pause' %}selected{% endif %}>En pause</option>
+          <option value="termine" {% if form.status.value == 'termine' %}selected{% endif %}>Terminé</option>
+          <option value="archive" {% if form.status.value == 'archive' %}selected{% endif %}>Archivé</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+        <a href="{% url 'project-list' %}" class="btn btn-outline">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

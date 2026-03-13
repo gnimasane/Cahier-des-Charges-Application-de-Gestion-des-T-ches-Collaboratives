@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block page_title %}Détail tâche{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;">{{ task.title }}</h2>
+      {% if task.status == 'termine' %}<span class="badge badge-success">✅ Terminé</span>
+      {% elif task.status == 'en_cours' %}<span class="badge badge-warning">⏳ En cours</span>
+      {% else %}<span class="badge badge-info">📌 À faire</span>{% endif %}
+    </div>
+    <p style="color:var(--text-muted);margin:12px 0;">{{ task.description|default:"Aucune description." }}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+      <div><small style="color:var(--text-muted);">Projet</small><br><strong>{{ task.project.name }}</strong></div>
+      <div><small style="color:var(--text-muted);">Assigné à</small><br><strong>{{ task.assigned_to.get_full_name|default:task.assigned_to.username|default:"—" }}</strong></div>
+      <div><small style="color:var(--text-muted);">Priorité</small><br>
+        {% if task.priority == 'urgente' %}<span class="badge badge-danger">Urgente</span>
+        {% elif task.priority == 'haute' %}<span class="badge badge-warning">Haute</span>
+        {% else %}<span class="badge badge-info">{{ task.get_priority_display }}</span>{% endif %}
+      </div>
+      <div><small style="color:var(--text-muted);">Deadline</small><br>
+        {% if task.deadline %}
+          {% if task.is_overdue %}<span style="color:var(--danger);">⚠️ {{ task.deadline|date:"d/m/Y H:i" }}</span>
+          {% else %}{{ task.deadline|date:"d/m/Y H:i" }}{% endif %}
+        {% else %}—{% endif %}
+      </div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      {% if task.project.creator == request.user or task.assigned_to == request.user %}
+      <a href="{% url 'task-edit' task.pk %}" class="btn btn-primary btn-sm">✏️ Modifier</a>
+      {% endif %}
+      {% if task.project.creator == request.user %}
+      <a href="{% url 'task-delete' task.pk %}" class="btn btn-danger btn-sm">🗑 Supprimer</a>
+      {% endif %}
+      <a href="{% url 'project-detail' task.project.pk %}" class="btn btn-outline btn-sm">← Retour au projet</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

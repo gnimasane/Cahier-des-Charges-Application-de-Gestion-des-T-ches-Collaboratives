@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard Étudiant — ESMT{% endblock %}
+{% block page_title %}Mon espace{% endblock %}
+
+{% block extra_css %}
+.chart-bar-wrap { display:flex; align-items:flex-end; gap:14px; height:130px; padding:0 8px; }
+.chart-bar-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
+.chart-bar { width:100%; border-radius:8px 8px 0 0; transition:all 0.4s ease; min-height:4px; }
+.chart-bar-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+.chart-bar-val { font-size:13px; font-weight:800; font-family:Syne,sans-serif; color:var(--text); }
+.donut-wrap { position:relative; width:110px; height:110px; flex-shrink:0; }
+.donut-wrap svg { transform:rotate(-90deg); }
+.donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.donut-center strong { display:block; font-family:Syne,sans-serif; font-size:20px; font-weight:800; color:var(--text); line-height:1; }
+.donut-center span { font-size:10px; color:var(--muted); font-weight:600; }
+.legend-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text2); }
+.legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+{% endblock %}
+
+{% block content %}
+
+<!-- Bandeau user -->
+<div style="background:linear-gradient(135deg,#ecfdf5,#e0f2fe);border:1.5px solid #a7f3d0;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+  <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:white;flex-shrink:0;">{{ user.username|first|upper }}</div>
+  <div>
+    <div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#0c2340;">{{ user.get_full_name|default:user.username }}</div>
+    <span style="font-size:11px;background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:99px;font-weight:700;"> Étudiant</span>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:12px;">
+    <div style="text-align:center;background:white;border:1.5px solid #a7f3d0;border-radius:12px;padding:10px 18px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#7a94b0;">Total tâches</div>
+      <div style="font-family:Syne,sans-serif;font-size:22px;font-weight:800;color:#0c2340;">{{ stats.total }}</div>
+    </div>
+    <div style="text-align:center;background:white;border:1.5px solid #fecaca;border-radius:12px;padding:10px 18px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#7a94b0;">En retard</div>
+      <div style="font-family:Syne,sans-serif;font-size:22px;font-weight:800;color:#dc2626;">{{ stats.en_retard }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Statistiques graphiques -->
+<div class="grid-2" style="margin-bottom:18px;">
+
+  <!-- Graphique en barres -->
+  <div class="card">
+    <div class="card-title"> Répartition des tâches</div>
+    {% with total=stats.total %}
+    <div class="chart-bar-wrap">
+      {% if total > 0 %}
+        <div class="chart-bar-col">
+          <div class="chart-bar-val">{{ stats.a_faire }}</div>
+          <div class="chart-bar" style="height:{% widthratio stats.a_faire total 110 %}px;background:linear-gradient(180deg,#38bdf8,#0ea5e9);"></div>
+          <div class="chart-bar-label">À faire</div>
+        </div>
+        <div class="chart-bar-col">
+          <div class="chart-bar-val">{{ stats.en_cours }}</div>
+          <div class="chart-bar" style="height:{% widthratio stats.en_cours total 110 %}px;background:linear-gradient(180deg,#fbbf24,#f59e0b);"></div>
+          <div class="chart-bar-label">En cours</div>
+        </div>
+        <div class="chart-bar-col">
+          <div class="chart-bar-val">{{ stats.termine }}</div>
+          <div class="chart-bar" style="height:{% widthratio stats.termine total 110 %}px;background:linear-gradient(180deg,#34d399,#10b981);"></div>
+          <div class="chart-bar-label">Terminées</div>
+        </div>
+        <div class="chart-bar-col">
+          <div class="chart-bar-val">{{ stats.en_retard }}</div>
+          <div class="chart-bar" style="height:{% if stats.en_retard %}{% widthratio stats.en_retard total 110 %}{% else %}4{% endif %}px;background:linear-gradient(180deg,#f87171,#dc2626);"></div>
+          <div class="chart-bar-label">Retard</div>
+        </div>
+        <div class="chart-bar-col">
+          <div class="chart-bar-val">{{ stats.urgentes }}</div>
+          <div class="chart-bar" style="height:{% if stats.urgentes %}{% widthratio stats.urgentes total 110 %}{% else %}4{% endif %}px;background:linear-gradient(180deg,#c084fc,#9333ea);"></div>
+          <div class="chart-bar-label">Urgentes</div>
+        </div>
+      {% else %}
+        <div style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Aucune donnée</div>
+      {% endif %}
+    </div>
+    {% endwith %}
+  </div>
+
+  <!-- Graphique en anneau (taux de complétion) -->
+  <div class="card">
+    <div class="card-title"> Taux de complétion</div>
+    {% with total=stats.total termine=stats.termine %}
+    {% if total > 0 %}
+      {% with pct=termine|floatformat:0 %}
+      <div style="display:flex;align-items:center;gap:24px;padding:8px 0;">
+        <!-- Donut SVG -->
+        <div class="donut-wrap">
+          {% with circ=283 %}
+          {% with filled=termine %}
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="45" fill="none" stroke="#e0f2fe" stroke-width="12"/>
+            <circle cx="55" cy="55" r="45" fill="none" stroke="#10b981" stroke-width="12"
+              stroke-dasharray="{{ circ }}"
+              stroke-dashoffset="{% widthratio termine total circ %}"
+              style="stroke-dashoffset:calc({{ circ }}px - {% widthratio termine total circ %}px);transition:stroke-dashoffset 0.8s ease;"
+            />
+          </svg>
+          {% endwith %}{% endwith %}
+          <div class="donut-center">
+            <strong>{% widthratio termine total 100 %}%</strong>
+            <span>terminé</span>
+          </div>
+        </div>
+        <!-- Légende -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Terminées : <strong>{{ termine }}</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9;"></div>À faire : <strong>{{ stats.a_faire }}</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>En cours : <strong>{{ stats.en_cours }}</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>En retard : <strong>{{ stats.en_retard }}</strong></div>
+        </div>
+      </div>
+      {% endwith %}
+    {% else %}
+      <div class="empty-state" style="padding:20px;"><div class="empty-icon" style="font-size:28px;">📊</div><p>Aucune tâche pour le moment</p></div>
+    {% endif %}
+    {% endwith %}
+    <!-- Barre progression globale -->
+    {% if stats.total > 0 %}
+    <div style="margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;"><span>Progression globale</span><span><strong>{% widthratio stats.termine stats.total 100 %}%</strong></span></div>
+      <div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:{% widthratio stats.termine stats.total 100 %}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="grid-2">
+  <!-- Tâches urgentes -->
+  <div class="card" style="border-color:#fecaca;">
+    <div class="card-title" style="color:#dc2626;"> Tâches urgentes</div>
+    {% if taches_urgentes %}
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      {% for task in taches_urgentes %}
+      <a href="{% url 'task-detail' task.pk %}" style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:1.5px solid #fecaca;background:#fff5f5;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='#fecaca'">
+        <span class="dot dot-red"></span>
+        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#0c2340;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ task.title }}</div><div style="font-size:11px;color:#7a94b0;">{{ task.project.name }} · {{ task.deadline|date:"d/m/Y" }}</div></div>
+        <span class="badge badge-danger">{{ task.get_priority_display }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">✅</div><h3>Aucune tâche urgente</h3><p>Tout est sous contrôle !</p></div>
+    {% endif %}
+  </div>
+
+  <!-- Mes tâches récentes -->
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between;"><span>📋 Mes tâches</span><a href="{% url 'task-list' %}" class="btn btn-ghost btn-sm">Voir tout</a></div>
+    {% if mes_taches %}
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      {% for task in mes_taches %}
+      <a href="{% url 'task-detail' task.pk %}" style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;border:1.5px solid #dbeafe;background:#f0f9ff;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.borderColor='#0ea5e9';this.style.background='#e0f2fe'" onmouseout="this.style.borderColor='#dbeafe';this.style.background='#f0f9ff'">
+        <span class="dot {% if task.status == 'termine' %}dot-green{% elif task.status == 'en_cours' %}dot-yellow{% else %}dot-blue{% endif %}"></span>
+        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#0c2340;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ task.title }}</div><div style="font-size:11px;color:#7a94b0;">{{ task.project.name }} · {{ task.deadline|date:"d/m/Y" }}</div></div>
+        <span class="badge {% if task.status == 'termine' %}badge-success{% elif task.status == 'en_cours' %}badge-warning{% else %}badge-info{% endif %}">{{ task.get_status_display }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">📋</div><h3>Aucune tâche</h3><p>Tes tâches assignées apparaîtront ici.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Projets -->
+<div class="card">
+  <div class="card-title">📁 Projets auxquels je participe</div>
+  {% if mes_projets %}
+  <div class="grid-3">
+    {% for project in mes_projets %}
+    <a href="{% url 'project-detail' project.pk %}" style="display:block;padding:14px;border-radius:11px;border:1.5px solid #dbeafe;background:#f0f9ff;text-decoration:none;transition:all 0.18s;" onmouseover="this.style.borderColor='#10b981';this.style.background='#ecfdf5'" onmouseout="this.style.borderColor='#dbeafe';this.style.background='#f0f9ff'">
+      <div style="font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:#0c2340;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ project.name }}</div>
+      <div style="font-size:11px;color:#7a94b0;margin-bottom:9px;">{% if project.creator == user %}👑 Créateur{% else %}👥 Membre{% endif %} · {{ project.tasks.count }} tâche{{ project.tasks.count|pluralize }}</div>
+      {% with rate=project.get_completion_rate %}
+      <div class="progress-bar"><div class="progress-fill" style="width:{{ rate }}%;background:linear-gradient(90deg,#059669,#10b981);"></div></div>
+      <div style="font-size:10px;color:#7a94b0;margin-top:3px;text-align:right;font-weight:600;">{{ rate }}%</div>
+      {% endwith %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="empty-icon">📁</div><h3>Aucun projet</h3><p>Un professeur doit t'ajouter à un projet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
