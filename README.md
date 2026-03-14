@@ -52,11 +52,16 @@ python manage.py runserver
 cd frontend-angular
 npm install
 ng serve
-Accès :
-API Backend : http://localhost:8000/api/
+Accès
 
-Frontend Angular : http://localhost:4200/
-Admin Django : http://localhost:8000/admin/
+API Backend :
+http://127.0.0.1:8000/api/
+
+Application Web :
+http://127.0.0.1:8000/
+
+Admin Django :
+http://127.0.0.1:8000/admin/
 
 -API Routes principales
 Auth
